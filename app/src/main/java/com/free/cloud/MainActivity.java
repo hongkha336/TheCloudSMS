@@ -16,6 +16,7 @@ import me.everything.providers.android.telephony.TelephonyProvider;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -48,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        startService(new Intent(this, BackgroundService.class));
+//        startService(new Intent(this, BackgroundService.class));
 
 
         RxPermissions rxPermissions = new RxPermissions(this); // where this is an Activity instance // Must be done during an initialization phase like onCreate
@@ -81,16 +82,16 @@ public class MainActivity extends AppCompatActivity {
                         // Oups permission denied
                     }
                 });
-//
-//        rxPermissions
-//                .request(Manifest.permission.GET_ACCOUNTS)
-//                .subscribe(granted -> {
-//                    if (granted) { // Always true pre-M
-//                        // I can control the camera now
-//                    } else {
-//                        // Oups permission denied
-//                    }
-//                });
+
+        rxPermissions
+                .request(Manifest.permission.RECEIVE_SMS)
+                .subscribe(granted -> {
+                    if (granted) { // Always true pre-M
+                        // I can control the camera now
+                    } else {
+                        // Oups permission denied
+                    }
+                });
 
 
 
@@ -109,32 +110,35 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 signIn();
+
             }
         });
 
 
         try{
             GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getApplicationContext());
-
-            //if you want to use your common space of G drive
+            TextView tv_email = findViewById(R.id.txt_email);
+            tv_email.setText(account.getEmail().toString());
             driveServiceHelper = new DriveServiceHelper(DriveServiceHelper.getGoogleDriveService(getApplicationContext(), account, "CloudSMS"));
-
+            Button btn = findViewById(R.id.btnLogin);
+            btn.setVisibility(View.INVISIBLE);
         }catch (Exception e) {
-            //signIn();
+            Button btn = findViewById(R.id.btnLogin);
+            btn.setVisibility(View.VISIBLE);
         }
 
-        try{
-            startService(new Intent(this, BackgroundService.class));
-        }
-        catch (Exception e)
-        {}
+//        try{
+//            startService(new Intent(this, BackgroundService.class));
+//        }
+//        catch (Exception e)
+//        {}
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        startService(new Intent(this, BackgroundService.class));
-    }
+//    @Override
+//    protected void onDestroy() {
+//        super.onDestroy();
+//        startService(new Intent(this, BackgroundService.class));
+//    }
 
     private void signIn() {
 
@@ -159,10 +163,25 @@ public class MainActivity extends AppCompatActivity {
             case 400:
 
                 if (resultCode == RESULT_OK) {
+                    try{
+                        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getApplicationContext());
+                        TextView tv_email = findViewById(R.id.txt_email);
+                        tv_email.setText(account.getEmail().toString());
+                        Button btn = findViewById(R.id.btnLogin);
+                        btn.setVisibility(View.INVISIBLE);
+                    }catch (Exception e)
+                    {
+                        Button btn = findViewById(R.id.btnLogin);
+                        btn.setVisibility(View.VISIBLE);
+                    }
                     handleSignInIntent(data);
                 }else
                 {
-                    Toast.makeText(this,"Sign in fail. Checking your connection",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this,"Signin fail.",Toast.LENGTH_SHORT).show();
+                    TextView tv_email = findViewById(R.id.txt_email);
+                    tv_email.setText("Signin fail");
+                    Button btn = findViewById(R.id.btnLogin);
+                    btn.setVisibility(View.VISIBLE);
                 }
                 break;
         }
